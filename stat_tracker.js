@@ -20,21 +20,19 @@ function getStats(type, initial, current, hits) {
 	var mod, modIncrement;
 	var max, minMax;
 
-	if (statSelect()=="str") {
+	if (type == "str") {
 		mod=0.0009954;
 		max=11;
 		minMax=9;
 		modIncrement=0.0000014965;
 //		modMax=0.0012947;
-	}
-	else if (statSelect()=="dex") {
+	} else if (type == "dex") {
 		mod=0.00057334;
 		max=10;
 		minMax=8;
 		modIncrement=0.0000007418493;
 //		modMax=0.00072171;
-	}
-	else if (statSelect()=="int") {
+	} else if (type == "int") {
 		mod=0.0001414791;
 		max=10;
 		minMax=8;
