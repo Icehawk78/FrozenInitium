@@ -91,7 +91,7 @@ function init() {
             dex: parseFloat(response.find('[name=dexterity]').text().split(' ')[0]),
             int: parseFloat(response.find('[name=intelligence]').text().split(' ')[0])
         };
-        var defaultData = {str: {initial: currentStats.str, current: currentStats.str, hits: 0}, dex: {initial: currentStats.dex, current: currentStats.dex, hits: 0}, int: {initial: currentStats.int, current: currentStats.int, hits: 0}};
+        var defaultData = {str: {initial: currentStats.str, current: currentStats.str, hitCalc: 0, hits: -1}, dex: {initial: currentStats.dex, current: currentStats.dex, hitCalc: 0, hits: -1}, int: {initial: currentStats.int, current: currentStats.int, hitCalc: 0, hits: -1}};
         myStats = parseData(characterName, defaultData);
         if (myStats.str.current != currentStats.str || myStats.dex.current != currentStats.dex || myStats.int.current != currentStats.int) {
             console.log(myStats);
@@ -100,10 +100,77 @@ function init() {
             storeData(characterName, myStats);
         }
         ['str', 'dex', 'int'].forEach(function(type) {
-            var stats = getStats(type, myStats[type].initial, myStats[type].current, myStats[type].hits);
+            var stats = getStats(type, myStats[type].initial, myStats[type].current, myStats[type].hitCalc);
             console.log('[' + type + '] Min: ', stats.min, ' Max: ', stats.max);
         });
+        var htmlString = '<div style="display:inline-block; cursor: pointer;" id="statCounter"><img style="padding: 0 0 3px;" src="https://s3.amazonaws.com/imappy/3d_bar_chart.png" border="0/"></div>';
+        $(".header-stats").prepend(htmlString);
+        $("#statCounter").click(showTracker);
     });
+ 
+    var mkPopup = function(content) {
+        // close all other popups, increment popup counter
+        closePagePopup();
+        currentPopupStackIndex++;
+        exitFullscreenChat();
+
+        var pagePopupId = "page-popup" + currentPopupStackIndex;
+
+        //No elements have z-index on the combat screen, so we
+        //cant have page-popup-glass there because it relies on
+        //z-index to not cover everything
+        var structure = "<div id='"+pagePopupId+"'><div id='" +
+            pagePopupId+"-content' style='min-height:150px;' " +
+            "class='page-popup'><img id='banner-loading-icon' " +
+            "src='javascript/images/wait.gif' border=0/></div>" +
+            "<div class='page-popup-glass'></div><a class='page-popup-X' " +
+            "onclick='closePagePopup()'>X</a></div>";
+
+        // checks if current page is doesn't have #page-popup-root
+        //  and adds the needed div if it is
+        if ($("#page-popup-root").length === 0) {
+            $('<div id="page-popup-root"></div>').insertAfter(".chat_box");
+        }
+
+        //Create popup
+        $("#page-popup-root").append(structure);
+
+        //If chat box doesnt have z index, remove glass box
+        if( $(".chat_box").css('z-index') != '1000100') {
+            $(".page-popup-glass").remove();
+        }
+
+        //Fill popup with content
+        $("#"+pagePopupId+"-content").html(content);
+
+        // pressing escape will close the popup
+        if (currentPopupStackIndex === 1) {
+            $(document).bind("keydown",function(e) {
+                if ((e.keyCode == 27)) {
+                    closePagePopup();
+                }
+            });
+        }
+
+        // hides previous popup if there was one
+        if (currentPopupStackIndex > 1) {
+            $("#page-popup" + (currentPopupStackIndex-1)).hide();
+        }
+    };
+
+    showTracker = function() {
+        var popTitle = "<center><h3>Stat Tracker for "+characterName+"</h3></center>";
+        var popContent = "";
+
+        popContent += '<center><h3>Saved stats:</h3></center>';
+
+        ['str', 'dex', 'int'].forEach(function(type) {
+            var stats = getStats(type, myStats[type].initial, myStats[type].current, myStats[type].hitCalc);
+            popContent += "<center>["+type+"] Min: " + Math.round(stats.min * 100) / 100 + ", Max: " + Math.round(stats.max * 100) / 100 + ", Hits: " + myStats[type].hits + "</center>";
+        });
+
+        mkPopup(popTitle + popContent);
+    };
 
     doHandAttack = function(hand) {
         if (myStats === null) {
@@ -119,11 +186,14 @@ function init() {
                         int: parseFloat(response.find('[name=intelligence]').text().split(' ')[0])
                     };
                     ['str', 'dex', 'int'].forEach(function(type) {
-                        if (myStats[type].hits > 0 || myStats[type].current < newStats[type]) {
-                            if (myStats[type].hits === 0) {
+                        if (myStats[type].hits > -1 || myStats[type].current < newStats[type]) {
+                            if (myStats[type].hits === -1) {
                                 myStats[type].initial = newStats[type];
                             }
                             myStats[type].hits += 1;
+                            if (myStats[type].current < newStats[type]) {
+                                myStats[type].hitCalc = myStats[type].hits;
+                            }
                             myStats[type].current = newStats[type];
                         }
                     });
