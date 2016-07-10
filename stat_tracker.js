@@ -13,6 +13,7 @@ function storeData(key, value) {
   localStorage.putItem(key, JSON.stringify(value));
 }
 
+
 var characterName = $('[rel=#profile]').text();
 $.get($('.character-display-box').find('a').first().attr('rel'), function(res) {
   var response = $($.parseHTML(res));
