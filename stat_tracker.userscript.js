@@ -18,7 +18,7 @@ function parseData(key, defaultVal) {
 }
 
 function storeData(key, value) {
-	localStorage.putItem(key, JSON.stringify(value));
+	localStorage.setItem(key, JSON.stringify(value));
 }
 
 function getStats(type, initial, current, hits) {
