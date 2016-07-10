@@ -120,6 +120,9 @@ function init() {
                     };
                     ['str', 'dex', 'int'].forEach(function(type) {
                         if (myStats[type].hits > 0 || myStats[type].current < newStats[type]) {
+                            if (myStats[type].hits === 0) {
+                                myStats[type].initial = newStats[type];
+                            }
                             myStats[type].hits += 1;
                             myStats[type].current = newStats[type];
                         }
